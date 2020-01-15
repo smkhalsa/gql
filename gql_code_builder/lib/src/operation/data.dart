@@ -26,19 +26,17 @@ List<Class> _buildOperationDataClasses(
   DocumentNode schema,
   String schemaUrl,
 ) =>
-    _buildSelectionSetDataClasses(
+    buildSelectionSetDataClasses(
       "\$${op.name.value}",
       op.selectionSet,
-      doc,
       schema,
       schemaUrl,
       "Query",
     );
 
-List<Class> _buildSelectionSetDataClasses(
+List<Class> buildSelectionSetDataClasses(
   String name,
   SelectionSetNode selSet,
-  DocumentNode doc,
   DocumentNode schema,
   String schemaUrl,
   String type,
@@ -63,10 +61,9 @@ List<Class> _buildSelectionSetDataClasses(
             (field) => field.selectionSet != null,
           )
           .expand(
-            (field) => _buildSelectionSetDataClasses(
+            (field) => buildSelectionSetDataClasses(
               "${name}\$${field.alias?.value ?? field.name.value}",
               field.selectionSet,
-              doc,
               schema,
               schemaUrl,
               _getTypeName(
