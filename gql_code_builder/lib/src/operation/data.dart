@@ -5,6 +5,7 @@ import "package:gql_code_builder/src/common.dart";
 
 List<Class> buildDataClasses(
   DocumentNode doc,
+  String fragmentsDocUrl,
   DocumentNode schema,
   String schemaUrl,
 ) =>
@@ -14,6 +15,7 @@ List<Class> buildDataClasses(
           (op) => _buildOperationDataClasses(
             op,
             doc,
+            fragmentsDocUrl,
             schema,
             schemaUrl,
           ),
@@ -23,12 +25,14 @@ List<Class> buildDataClasses(
 List<Class> _buildOperationDataClasses(
   OperationDefinitionNode op,
   DocumentNode doc,
+  String fragmentsDocUrl,
   DocumentNode schema,
   String schemaUrl,
 ) =>
     buildSelectionSetDataClasses(
       "\$${op.name.value}",
       op.selectionSet,
+      fragmentsDocUrl,
       schema,
       schemaUrl,
       "Query",
@@ -37,6 +41,7 @@ List<Class> _buildOperationDataClasses(
 List<Class> buildSelectionSetDataClasses(
   String name,
   SelectionSetNode selSet,
+  String fragmentsDocUrl,
   DocumentNode schema,
   String schemaUrl,
   String type,
@@ -45,6 +50,7 @@ List<Class> buildSelectionSetDataClasses(
       Class(
         (b) => b
           ..name = name
+          ..implements = _buildImplementedFragments(selSet, fragmentsDocUrl)
           ..constructors = _buildConstructors()
           ..fields = _buildFields()
           ..methods = _buildGetters(
@@ -64,6 +70,7 @@ List<Class> buildSelectionSetDataClasses(
             (field) => buildSelectionSetDataClasses(
               "${name}\$${field.alias?.value ?? field.name.value}",
               field.selectionSet,
+              fragmentsDocUrl,
               schema,
               schemaUrl,
               _getTypeName(
@@ -78,6 +85,15 @@ List<Class> buildSelectionSetDataClasses(
             ),
           ),
     ];
+
+ListBuilder<Reference> _buildImplementedFragments(
+  SelectionSetNode selSet,
+  String fragmentsDocUrl,
+) =>
+    ListBuilder<Reference>(selSet.selections
+        .whereType<FragmentSpreadNode>()
+        .map<Reference>(
+            (fragNode) => refer("\$${fragNode.name.value}", fragmentsDocUrl)));
 
 ListBuilder<Field> _buildFields() => ListBuilder<Field>(
       <Field>[
@@ -128,9 +144,13 @@ ListBuilder<Method> _buildGetters(
               type,
             ),
           )
+<<<<<<< HEAD:gql_code_builder/lib/src/operation/data.dart
           .where(
             (getter) => getter != null,
           ),
+=======
+          .where((getter) => getter != null),
+>>>>>>> make data classes implement fragment class interfaces:gql_code_gen/lib/src/operation/data.dart
     );
 
 Method _buildGetter(
