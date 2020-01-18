@@ -28,6 +28,7 @@ class ReqBuilder implements Builder {
       doc,
       schema,
       buildStep.inputId.changeExtension(opExtension).uri.toString(),
+      buildStep.inputId.changeExtension(dataExtension).uri.toString(),
       schemaId.changeExtension(schemaExtension).uri.toString(),
     );
 

@@ -7,6 +7,7 @@ List<Class> buildOperationArgsClasses(
   DocumentNode doc,
   DocumentNode schema,
   String opDocUrl,
+  String dataDocUrl,
   String schemaUrl,
 ) =>
     doc.definitions
@@ -16,6 +17,7 @@ List<Class> buildOperationArgsClasses(
             op,
             schema,
             opDocUrl,
+            dataDocUrl,
             schemaUrl,
           ),
         )
@@ -25,15 +27,16 @@ Class _buildOperationArgsClass(
   OperationDefinitionNode node,
   DocumentNode schema,
   String opDocUrl,
+  String dataDocUrl,
   String schemaUrl,
 ) =>
     Class(
       (b) => b
         ..name = node.name.value
-        ..extend = refer(
-          "Request",
-          "package:gql_exec/gql_exec.dart",
-        )
+        ..extend = TypeReference((b) => b
+          ..symbol = "BuiltRequest"
+          ..url = "package:gql_code_builder/src/built_request.dart"
+          ..types.add(refer("\$${node.name.value}", dataDocUrl)))
         ..constructors = ListBuilder<Constructor>(<Constructor>[
           Constructor(
             (b) => b
@@ -57,22 +60,24 @@ Class _buildOperationArgsClass(
               ]),
           ),
         ])
-        ..methods = _buildSetters(
-          node.variableDefinitions,
+        ..methods = _buildMethods(
+          node,
           schema,
           opDocUrl,
+          dataDocUrl,
           schemaUrl,
         ),
     );
 
-ListBuilder<Method> _buildSetters(
-  List<VariableDefinitionNode> nodes,
+ListBuilder<Method> _buildMethods(
+  OperationDefinitionNode node,
   DocumentNode schema,
   String opDocUrl,
+  String dataDocUrl,
   String schemaUrl,
 ) =>
-    ListBuilder<Method>(
-      nodes.map<Method>(
+    ListBuilder(<Method>[
+      ...node.variableDefinitions.map<Method>(
         (VariableDefinitionNode node) => _buildSetter(
           node,
           schema,
@@ -80,7 +85,21 @@ ListBuilder<Method> _buildSetters(
           schemaUrl,
         ),
       ),
-    );
+      _buildParse(node, dataDocUrl)
+    ]);
+
+Method _buildParse(OperationDefinitionNode node, String dataDocUrl) =>
+    Method((b) => b
+      ..returns = refer("\$${node.name.value}", dataDocUrl)
+      ..name = "parse"
+      ..requiredParameters = ListBuilder<Parameter>(<Parameter>[
+        Parameter((b) => b
+          ..type = refer("Map<String, dynamic>")
+          ..name = "json")
+      ])
+      ..lambda = true
+      ..body =
+          refer("\$${node.name.value}", dataDocUrl).call([refer("json")]).code);
 
 Method _buildSetter(
   VariableDefinitionNode node,

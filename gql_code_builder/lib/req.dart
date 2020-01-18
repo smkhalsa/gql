@@ -6,6 +6,7 @@ Library buildReqLibrary(
   DocumentNode doc,
   DocumentNode schema,
   String opDocUrl,
+  String dataDocUrl,
   String schemaUrl,
 ) =>
     Library(
@@ -15,6 +16,7 @@ Library buildReqLibrary(
             doc,
             schema,
             opDocUrl,
+            dataDocUrl,
             schemaUrl,
           ),
         ),
